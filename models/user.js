@@ -8,7 +8,9 @@ const UserSchema = new Schema({
         unique: true, 
         required: true
     },
-    password: String // might be unnecessary when we do Google integration
+    password: String, // might be unnecessary when we do Google integration
+    authType: String,
+    googleId: String
 })
 
 UserSchema.methods.checkPassword = function(password){
@@ -16,12 +18,16 @@ UserSchema.methods.checkPassword = function(password){
 }
 
 UserSchema.pre('save', function(next){
-    return bcrypt.genSalt(10).then(salt => {
-        return bcrypt.hash(this.password, salt)
-    }).then(hash => {
-        this.password = hash
+    if(this.authType !== "google"){
+        return bcrypt.genSalt(10).then(salt => {
+            return bcrypt.hash(this.password, salt)
+        }).then(hash => {
+            this.password = hash
+            return Promise.resolve()
+        })
+    } else {
         return Promise.resolve()
-    })
+    }
 });
 
 const User = mongoose.model("User", UserSchema)
